@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using NerdStore.Catalogo.Domain;
 using NerdStore.Core.Data;
 using System;
@@ -22,16 +23,31 @@ namespace NerdStore.Catalogo.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            foreach (var property in modelBuilder.Model.GetEntityTypes().SelectMany(
-                e => e.GetProperties().Where(p => p.ClrType == typeof(string))))
-                property.GetRelationalTypeMapping().Coolu
+            //foreach (var property in modelBuilder.Model.GetEntityTypes().SelectMany(
+            //    e => e.GetProperties().Where(p => p.ClrType == typeof(string))))
+            //    property.Rela
 
-            base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(CatalogoContext).Assembly);
+
+            //base.OnModelCreating(modelBuilder);
         }
 
-        public Task<bool> Commit()
+        public async Task<bool> Commit()
         {
-            throw new NotImplementedException();
+            foreach (var entry in ChangeTracker.Entries().Where(entry => entry.Entity.GetType().GetProperty("DataCadastro") != null))
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Property("DataCadastro").CurrentValue = DateTime.Now;
+                }
+
+                if (entry.State == EntityState.Modified)
+                {
+                    entry.Property("DataCadastro").IsModified = false;
+                }
+            }
+
+            return await base.SaveChangesAsync() > 0;
         }
     }
 }
